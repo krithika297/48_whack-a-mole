@@ -6,7 +6,7 @@ class Hole:
         self.center_x = center_x
         self.center_y = center_y
 
-        # Size of the actual mole shown on screen.
+        # Size of the actual mole.
         self.mole_radius = 32
 
         self.active = False
