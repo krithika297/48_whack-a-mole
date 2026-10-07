@@ -61,7 +61,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()import pygame
+    main()
+import pygame
 from game.game_engine import GameEngine
 
 
