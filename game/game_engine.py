@@ -3,11 +3,11 @@ import random
 from .hole import Hole
 
 
-# Game Engine
-
+# Colors
 DARK_BROWN = (60, 40, 20)
 MOLE_BROWN = (140, 95, 55)
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 
 
 class GameEngine:
@@ -33,10 +33,16 @@ class GameEngine:
 
         self.score = 0
         self.misses = 0
+
         self.font = pygame.font.SysFont("Arial", 28)
+        self.game_over_font = pygame.font.SysFont("Arial", 48)
+        self.final_score_font = pygame.font.SysFont("Arial", 36)
+        self.instruction_font = pygame.font.SysFont("Arial", 24)
+
         self.game_over = False
 
     def handle_event(self, event):
+        # When the game is over, ignore game clicks.
         if self.game_over:
             return
 
@@ -46,8 +52,6 @@ class GameEngine:
     def _handle_click(self, pos):
         hit_something = False
 
-        # Check only active moles and use the actual mole-sized
-        # circular hit area instead of the large overlapping hole area.
         for hole in self.holes:
             if not hole.active:
                 continue
@@ -55,7 +59,6 @@ class GameEngine:
             dx = pos[0] - hole.center_x
             dy = pos[1] - hole.center_y
 
-            # Mole is drawn with radius 32 pixels.
             if dx * dx + dy * dy <= hole.mole_radius * hole.mole_radius:
                 if hole.whack():
                     self.score += 1
@@ -66,8 +69,7 @@ class GameEngine:
             self.misses += 1
 
     def handle_input(self):
-        # Reserved for continuously-held-key input;
-        # this game is entirely mouse-driven.
+        # Mouse events are handled in handle_event().
         pass
 
     def update(self):
@@ -76,8 +78,16 @@ class GameEngine:
 
         self.time_left_frames -= 1
 
+        # End the game when the timer reaches zero.
         if self.time_left_frames <= 0:
+            self.time_left_frames = 0
             self.game_over = True
+
+            # Hide all active moles.
+            for hole in self.holes:
+                hole.active = False
+                hole.timer = 0
+
             return
 
         for hole in self.holes:
@@ -87,6 +97,7 @@ class GameEngine:
                 hole.pop_up(self.mole_up_frames)
 
     def render(self, screen):
+        # Draw the normal game screen.
         for hole in self.holes:
             pygame.draw.circle(
                 screen,
@@ -122,10 +133,54 @@ class GameEngine:
             (self.width - 140, 10)
         )
 
-        if self.game_over and not getattr(
-            self,
-            "_game_over_logged",
-            False
-        ):
-            print("Time's up! Final score:", self.score)
-            self._game_over_logged = True
+        # Show game-over screen after the timer reaches zero.
+        if self.game_over:
+            self._render_game_over(screen)
+
+    def _render_game_over(self, screen):
+        # Dark overlay over the game.
+        overlay = pygame.Surface(
+            (self.width, self.height),
+            pygame.SRCALPHA
+        )
+        overlay.fill((0, 0, 0, 170))
+        screen.blit(overlay, (0, 0))
+
+        # Game Over text.
+        game_over_text = self.game_over_font.render(
+            "GAME OVER",
+            True,
+            WHITE
+        )
+
+        game_over_rect = game_over_text.get_rect(
+            center=(self.width // 2, 180)
+        )
+
+        screen.blit(game_over_text, game_over_rect)
+
+        # Final score.
+        final_score_text = self.final_score_font.render(
+            f"Final Score: {self.score}",
+            True,
+            WHITE
+        )
+
+        final_score_rect = final_score_text.get_rect(
+            center=(self.width // 2, 250)
+        )
+
+        screen.blit(final_score_text, final_score_rect)
+
+        # Instruction.
+        instruction_text = self.instruction_font.render(
+            "Press any key or click to exit",
+            True,
+            WHITE
+        )
+
+        instruction_rect = instruction_text.get_rect(
+            center=(self.width // 2, 320)
+        )
+
+        screen.blit(instruction_text, instruction_rect)

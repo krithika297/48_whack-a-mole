@@ -1,6 +1,7 @@
 import pygame
 from game.game_engine import GameEngine
 
+
 # Initialize pygame/Start application
 pygame.init()
 
@@ -16,17 +17,30 @@ GRASS_GREEN = (120, 170, 90)
 clock = pygame.time.Clock()
 FPS = 60
 
-# Game loop
+# Game engine
 engine = GameEngine(WIDTH, HEIGHT)
+
 
 def main():
     running = True
+
     while running:
         SCREEN.fill(GRASS_GREEN)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            engine.handle_event(event)
+
+            # After game over, any key or mouse click exits the game.
+            elif engine.game_over:
+                if (
+                    event.type == pygame.KEYDOWN
+                    or event.type == pygame.MOUSEBUTTONDOWN
+                ):
+                    running = False
+
+            else:
+                engine.handle_event(event)
 
         engine.handle_input()
         engine.update()
@@ -36,6 +50,7 @@ def main():
         clock.tick(FPS)
 
     pygame.quit()
+
 
 if __name__ == "__main__":
     main()
